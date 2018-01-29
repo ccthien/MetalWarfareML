@@ -41,6 +41,7 @@ class Trainer(object):
         self.counter = 1
         self.action_history = {}
         self.local_done = False
+        self.print_debug = False
 
     def running_average(self, data, steps, running_mean, running_variance):
         """
@@ -69,6 +70,9 @@ class Trainer(object):
         isIdle = info.states[0][21]
         if info.local_done[0]:
             self.local_done = True
+            self.history_dict[info.agents[0]]['action_ref'] = {}
+            if self.print_debug:
+                print("done")
  
         offset = 1
         for i in range(0,10):
@@ -76,13 +80,22 @@ class Trainer(object):
             pre_reward = info.states[0][offset+i*2+1]
             if(pre_actID > 0.0 and abs(pre_reward)>0.000001):
                 history = self.history_dict[info.agents[0]]
-                pos = history["action_ref"][pre_actID]
-                r = history['rewards'][pos]
-                history['rewards'][pos] += pre_reward
-                history['cumulative_reward'] += pre_reward
-                the_action = history["actions"][pos]
-                print ("pre_actID",pre_actID, the_action, action_to_str(the_action),pre_reward, r)
                 
+                if pre_actID in history["action_ref"]:
+                    pos = history["action_ref"][pre_actID]
+                    if pos != None and pos < len(history['rewards']):
+                        r = history['rewards'][pos]
+                        history['rewards'][pos] += pre_reward
+                        history['cumulative_reward'] += pre_reward
+                        the_action = history["actions"][pos]
+                        if self.print_debug:
+                            print("pre_actID",pre_actID, the_action, action_to_str(the_action),pre_reward, r)
+                    else:
+                        print ("!!!!Wrong POS: ",pre_actID,pos,len(history['rewards']),len(history['states']))
+                else:
+                    if self.print_debug:
+                        print ("pre_actID not found: ",pre_actID)
+                    
                 
         if(isIdle > 0.0):
             history = self.history_dict[info.agents[0]]
@@ -167,7 +180,8 @@ class Trainer(object):
                         actID = info.states[idx][0]+1
                         history['action_ref'][actID] = len(history['states'])
                         history['states'].append(info.states[idx])
-                        print ("add actID", actID, actions[idx], action_to_str(actions[idx]))
+                        if self.print_debug:
+                            print ("add actID", actID, actions[idx], action_to_str(actions[idx]))
                         
                     if self.is_continuous:
                         history['epsilons'].append(epsi[idx])
@@ -202,10 +216,11 @@ class Trainer(object):
                     value_next = self.sess.run(self.model.value, feed_dict)[l]
                 history = vectorize_history(self.history_dict[info.agents[l]])
                 
-                for i in range(0,len(history['rewards'])):
-                    act = history['actions'][i]
-                    print(act,action_to_str(act),history['rewards'][i])
-                print("cumulative_reward",history['cumulative_reward'])
+                if self.print_debug:
+                    for i in range(0,len(history['rewards'])):
+                        act = history['actions'][i]
+                        print(act,action_to_str(act),history['rewards'][i])
+                    print("cumulative_reward",history['cumulative_reward'])
                 
                 history['advantages'] = get_gae(rewards=history['rewards'],
                                                 value_estimates=history['value_estimates'],
