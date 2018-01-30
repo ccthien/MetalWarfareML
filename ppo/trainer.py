@@ -95,7 +95,13 @@ class Trainer(object):
                 else:
                     if self.print_debug:
                         print ("pre_actID not found: ",pre_actID)
-                    
+
+        if abs(info.rewards[0]) > 0.0:
+            if self.print_debug:
+                print("rewards global",info.rewards[0])
+            history = self.history_dict[info.agents[0]]
+            size = len(history['rewards'])
+            history['rewards'][size-1] += info.rewards[0]
                 
         if(isIdle > 0.0):
             history = self.history_dict[info.agents[0]]
