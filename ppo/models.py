@@ -62,6 +62,7 @@ class PPOModel(object):
     def __init__(self):
         self.normalize = False
         self.observation_in = []
+        self.debug_observation = False
 
     def create_global_steps(self):
         """Creates TF ops to track and increment global training step."""
@@ -96,7 +97,8 @@ class PPOModel(object):
         #ccthien
         self.observation_resize = tf.image.resize_nearest_neighbor(self.observation_in[0], [16,16], name="resize_visual")
         self.observation_cut = self.observation_resize[:,10:,0:14,:]
-#         self.observation_cut128 = tf.image.resize_nearest_neighbor(self.observation_cut, [6*16,14*16])
+        if self.debug_observation:
+            self.observation_cut128 = tf.image.resize_nearest_neighbor(self.observation_cut, [6*16,14*16])
         
         streams = []
         for i in range(num_streams):

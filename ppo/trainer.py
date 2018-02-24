@@ -101,7 +101,10 @@ class Trainer(object):
                 print("rewards global",info.rewards[0])
             history = self.history_dict[info.agents[0]]
             size = len(history['rewards'])
-            history['rewards'][size-1] += info.rewards[0]
+            if size>0:
+                history['rewards'][size-1] += info.rewards[0]
+            else:
+                print("History size === 0!!!")
                 
         if(isIdle > 0.0):
             history = self.history_dict[info.agents[0]]
@@ -137,11 +140,12 @@ class Trainer(object):
             
         
         #ccthien
-#         img_path = "./observations/"
-#         if not os.path.exists(img_path):
-#             os.makedirs(img_path)
-#         img, cut = self.sess.run([self.model.observation_resize,self.model.observation_cut128], feed_dict=feed_dict)
-#         pltlib.image.imsave('{}cut{}.png'.format(img_path,self.counter), cut[0,:,:,:])
+        if self.model.debug_observation:
+            img_path = "./observations/"
+            if not os.path.exists(img_path):
+                os.makedirs(img_path)
+            img, cut = self.sess.run([self.model.observation_resize,self.model.observation_cut128], feed_dict=feed_dict)
+            pltlib.image.imsave('{}cut{}.png'.format(img_path,self.counter), cut[0,:,:,:])
 
 #         run_list = [self.model.state_in,self.model.state_in_remain,self.model.action_filter,
 #                     self.model.policy_original,self.model.policy,self.model.probs,self.model.probs_original]
@@ -154,6 +158,7 @@ class Trainer(object):
 #         print("policy",policy)
 #         print("probs",probs)
 #         print("probs_original",probs_original)
+
         self.counter += 1
         
         
